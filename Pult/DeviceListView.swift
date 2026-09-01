@@ -6,8 +6,9 @@ struct DeviceListView: View {
     @State private var pairingHost: DiscoveredHost?
     @State private var pin = ""
     @State private var showManual = false
-    @State private var manualIP = ""
     @State private var manualName = "Мой ПК"
+    @State private var manualAddress = ""
+    @State private var link: LinkKind = .tailscale
 
     var body: some View {
         Group {
@@ -23,6 +24,7 @@ struct DeviceListView: View {
             PairingSheet(host: host, pin: $pin) {
                 Task {
                     session.previewMode = false
+                    session.remember(host)
                     try? await service.connect(to: host, pin: pin)
                     pairingHost = nil
                 }
@@ -30,8 +32,18 @@ struct DeviceListView: View {
             .presentationDetents([.medium])
         }
         .sheet(isPresented: $showManual) {
-            ManualConnectSheet(name: $manualName, ip: $manualIP) {
-                pairingHost = DiscoveredHost(id: manualIP, name: manualName.isEmpty ? manualIP : manualName, os: .windows, host: manualIP.trimmingCharacters(in: .whitespaces), port: 17420, isOnline: true)
+            ManualConnectSheet(name: $manualName, address: $manualAddress, link: $link) {
+                let raw = manualAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+                let host = DiscoveredHost(
+                    id: raw.lowercased(),
+                    name: manualName.isEmpty ? raw : manualName,
+                    os: .windows,
+                    host: raw,
+                    port: 17420,
+                    isOnline: true,
+                    link: link
+                )
+                pairingHost = host
                 showManual = false
             }
             .presentationDetents([.medium])
@@ -44,22 +56,28 @@ struct DeviceListView: View {
 
     private var list: some View {
         List(session.hosts) { host in
-            Button { if host.isOnline { pairingHost = host } } label: {
-                HStack {
+            Button { pairingHost = host } label: {
+                HStack(spacing: 12) {
                     Image(systemName: host.os.symbol)
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(host.name).font(.body.weight(.semibold))
-                        Text(host.os.title).font(.footnote).foregroundStyle(.secondary)
+                        Text(host.host).font(.footnote).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text(host.isOnline ? "В сети" : "Не в сети").foregroundStyle(host.isOnline ? .green : .secondary)
+                    Label(host.link.title, systemImage: host.link.symbol)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(host.link == .tailscale ? Color.cyan : Color.green)
                 }
             }
         }
     }
 
     private var empty: some View {
-        ContentUnavailableView("Нет компьютеров", systemImage: "laptopcomputer.and.iphone", description: Text("Поставьте агент и нажмите + чтобы ввести IP."))
+        ContentUnavailableView(
+            "Нет компьютеров",
+            systemImage: "laptopcomputer.and.iphone",
+            description: Text("Wi-Fi дома или Tailscale онлайн. Нажми + и вставь IP из окна агента.")
+        )
     }
 }
 
@@ -73,7 +91,10 @@ struct PairingSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Text("Код на экране «\(host.name)»").font(.title2.weight(.semibold)).multilineTextAlignment(.center)
+                Text(host.link == .tailscale ? "Tailscale · \(host.host)" : "Wi-Fi · \(host.host)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text("PIN из окна агента").font(.title3.weight(.semibold))
                 TextField("••••", text: $pin)
                     .keyboardType(.numberPad)
                     .font(.system(size: 40, weight: .semibold, design: .rounded))
@@ -95,20 +116,36 @@ struct PairingSheet: View {
 
 struct ManualConnectSheet: View {
     @Binding var name: String
-    @Binding var ip: String
+    @Binding var address: String
+    @Binding var link: LinkKind
     var onAdd: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             Form {
+                Picker("Сеть", selection: $link) {
+                    Text("Tailscale").tag(LinkKind.tailscale)
+                    Text("Wi-Fi").tag(LinkKind.lan)
+                }
+                .pickerStyle(.segmented)
                 TextField("Имя", text: $name)
-                TextField("IP из окна агента", text: $ip).keyboardType(.decimalPad).textInputAutocapitalization(.never)
+                TextField(link == .tailscale ? "100.x.x.x или имя.ts.net" : "192.168.x.x", text: $address)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if link == .tailscale {
+                    Text("Один аккаунт Tailscale на ПК и iPhone. Адрес берётся из окна агента, строка Tailscale.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
-            .navigationTitle("По IP")
+            .navigationTitle("Подключить")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Отмена") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Далее") { onAdd() }.disabled(ip.count < 7) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Далее") { onAdd() }.disabled(address.trimmingCharacters(in: .whitespaces).count < 3)
+                }
             }
         }
     }

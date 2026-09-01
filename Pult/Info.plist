@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Пульт</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Пульт ищет компьютер в вашей Wi-Fi сети и показывает его экран. Трафик не уходит в интернет.</string>
+	<string>Пульт ищет компьютер в Wi-Fi и через Tailscale.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_pultdesk._tcp</string>
@@ -13,6 +13,8 @@
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
 	<key>UILaunchScreen</key>

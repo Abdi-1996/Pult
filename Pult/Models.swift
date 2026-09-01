@@ -8,13 +8,20 @@ enum HostOS: String, Codable, CaseIterable {
     var symbol: String { switch self { case .windows: "laptopcomputer"; case .mac: "desktopcomputer"; case .linux: "server.rack" } }
 }
 
-struct DiscoveredHost: Identifiable, Hashable {
+enum LinkKind: String, Codable {
+    case lan, tailscale
+    var title: String { self == .tailscale ? "Tailscale" : "Wi-Fi" }
+    var symbol: String { self == .tailscale ? "network" : "wifi" }
+}
+
+struct DiscoveredHost: Identifiable, Hashable, Codable {
     let id: String
     var name: String
     var os: HostOS
     var host: String
     var port: Int
     var isOnline: Bool
+    var link: LinkKind
 }
 
 enum ConnectionState: Equatable {
@@ -123,4 +130,33 @@ final class SessionStore {
     var incomingFile: (name: String, data: Data)?
     var apps: [RemoteApp] = []
     var appsLoading = false
+
+    private let savedKey = "pult.savedHosts"
+
+    init() { loadSaved() }
+
+    func remember(_ host: DiscoveredHost) {
+        var next = hosts.filter { $0.id != host.id }
+        next.insert(host, at: 0)
+        hosts = Array(next.prefix(8))
+        persist()
+    }
+
+    func mergeDiscovered(_ found: [DiscoveredHost]) {
+        var byID = Dictionary(uniqueKeysWithValues: hosts.map { ($0.id, $0) })
+        for item in found { byID[item.id] = item }
+        hosts = byID.values.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+    }
+
+    private func loadSaved() {
+        guard let data = UserDefaults.standard.data(forKey: savedKey),
+              let items = try? JSONDecoder().decode([DiscoveredHost].self, from: data) else { return }
+        hosts = items
+    }
+
+    private func persist() {
+        if let data = try? JSONEncoder().encode(hosts) {
+            UserDefaults.standard.set(data, forKey: savedKey)
+        }
+    }
 }

@@ -1,48 +1,19 @@
 # Пульт
 
-Управление компьютером с iPhone: живой экран, файлы, приложения, тачпад.
+Управление ПК с iPhone: экран, файлы, приложения, тачпад.
 
-Репозиторий: https://github.com/Abdi-1996/Pult
+## Онлайн через Tailscale
 
-## Что внутри
+1. Поставь [Tailscale](https://tailscale.com/download) на **ПК** и **iPhone**. Один аккаунт.
+2. Оба устройства включены в Tailscale (зелёный статус).
+3. На ПК: `pip install -r Agent/requirements.txt` и `python Agent/pult_agent.py`.
+4. В окне агента берёшь **Tailscale** (`100.x.x.x`) и **PIN**.
+5. На iPhone: **+ → Tailscale** → вставь `100.x.x.x` или `имя.ts.net` → PIN.
 
-- `Pult.xcodeproj` — приложение для iPhone / iPad
-- `Pult/` — SwiftUI
-- `Agent/pult_agent.py` — агент на Windows / macOS / Linux
+Проброс порта на роутере не нужен. Трафик идёт через сеть Tailscale.
 
-## 1. Компьютер
+Дома в одной Wi-Fi можно без Tailscale: **+ → Wi-Fi → LAN IP**.
 
-```bash
-git clone https://github.com/Abdi-1996/Pult.git
-cd Pult
-pip install -r Agent/requirements.txt
-python Agent/pult_agent.py
-```
+## Сборка
 
-В консоли появятся PIN и IP.
-
-## 2. iPhone
-
-Нужен Mac с Xcode 15+.
-
-```bash
-git clone https://github.com/Abdi-1996/Pult.git
-open Pult/Pult.xcodeproj
-```
-
-Signing & Capabilities → свой Apple ID → подключи iPhone кабелем → Run.
-
-В приложении: **+** → IP агента → PIN.
-
-Телефон и ПК — одна Wi-Fi, не гостевая.
-
-## Вкладки
-
-| Экран | Зачем |
-|---|---|
-| Экран | Картинка ПК + управление пальцем |
-| Файлы | Скачать на iPhone / залить на ПК |
-| Приложения | Запуск программ ПК |
-| Пульт | Тачпад и клавиатура |
-
-Иконку в Xcode можно поставить свою: `Pult/Assets.xcassets/AppIcon.appiconset/AppIcon.png` 1024×1024.
+Xcode 15+, iOS 17+. GitHub Action кладёт unsigned `Pult.ipa`.

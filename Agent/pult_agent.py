@@ -29,10 +29,68 @@ MODS = {"ctrl": Key.ctrl, "alt": Key.alt, "shift": Key.shift}
 MEDIA = {"playPause": Key.media_play_pause, "next": Key.media_next, "prev": Key.media_previous, "volumeUp": Key.media_volume_up, "volumeDown": Key.media_volume_down, "mute": Key.media_volume_mute}
 QUALITY = {"low": (960, 40), "medium": (1280, 55), "high": (1920, 70)}
 
+
+def is_tailscale_ip(ip: str) -> bool:
+    parts = ip.split(".")
+    if len(parts) != 4:
+        return False
+    try:
+        a, b = int(parts[0]), int(parts[1])
+    except ValueError:
+        return False
+    return a == 100 and 64 <= b <= 127
+
+
+def lan_ip() -> str:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        if ip and not ip.startswith("127."):
+            return ip
+    except OSError:
+        pass
+    try:
+        return socket.gethostbyname(socket.gethostname())
+    except OSError:
+        return "127.0.0.1"
+
+
+def tailscale_ip() -> str | None:
+    for cmd in (["tailscale", "ip", "-4"], ["tailscale.exe", "ip", "-4"]):
+        try:
+            out = subprocess.check_output(cmd, text=True, timeout=3, stderr=subprocess.DEVNULL).strip()
+            for line in out.splitlines():
+                ip = line.strip()
+                if is_tailscale_ip(ip):
+                    return ip
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            continue
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if is_tailscale_ip(ip):
+                return ip
+    except OSError:
+        pass
+    if SYSTEM == "Windows":
+        try:
+            out = subprocess.check_output(["ipconfig"], text=True, timeout=4, errors="ignore")
+            for raw in out.split():
+                token = raw.strip()
+                if is_tailscale_ip(token):
+                    return token
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            pass
+    return None
+
+
 def screen_size():
     with mss.mss() as sct:
         mon = sct.monitors[1]
         return mon["width"], mon["height"]
+
 
 def grab_jpeg(quality_key: str):
     width_cap, q = QUALITY.get(quality_key, QUALITY["medium"])
@@ -46,6 +104,7 @@ def grab_jpeg(quality_key: str):
         img = img.resize((w, h), Image.BILINEAR)
     buf = io.BytesIO(); img.save(buf, format="JPEG", quality=q, optimize=True)
     return buf.getvalue(), w, h
+
 
 def roots():
     home = Path.home()
@@ -61,6 +120,7 @@ def roots():
             if os.path.exists(p):
                 items.append({"name": f"Диск {letter}:", "path": p, "isDir": True, "size": 0})
     return [i for i in items if os.path.isdir(i["path"])]
+
 
 def list_dir(path: str):
     if not path:
@@ -82,6 +142,7 @@ def list_dir(path: str):
             continue
         entries.append({"name": child.name, "path": str(child), "isDir": is_dir, "size": size, "kind": child.suffix.lstrip(".").lower() or None})
     return {"type": "dir", "path": str(target), "entries": entries[:400]}
+
 
 def list_apps():
     items = []
@@ -105,6 +166,7 @@ def list_apps():
     items.sort(key=lambda x: x["name"].lower())
     return {"type": "apps", "items": items[:200]}
 
+
 def launch(app_id: str):
     if SYSTEM == "Darwin":
         subprocess.Popen(["open", "-a", app_id.replace(".app", "")])
@@ -112,6 +174,7 @@ def launch(app_id: str):
         os.startfile(app_id)
     else:
         subprocess.Popen(["xdg-open", app_id])
+
 
 def handle_input(msg):
     kind = msg.get("type")
@@ -143,6 +206,7 @@ def handle_input(msg):
         try: launch(msg.get("id") or "")
         except OSError as exc: print("launch", exc)
 
+
 async def stream_loop(ws, state):
     while state["on"]:
         try:
@@ -151,6 +215,7 @@ async def stream_loop(ws, state):
         except Exception as exc:
             print("frame", exc); await asyncio.sleep(1)
         await asyncio.sleep({"low": 0.12, "medium": 0.08, "high": 0.05}.get(state["quality"], 0.08))
+
 
 async def client(ws):
     print("Клиент. PIN", PIN)
@@ -192,22 +257,44 @@ async def client(ws):
         handle_input(msg)
     if stream_task: stream_task.cancel()
 
+
 async def main():
     hostname = socket.gethostname()
-    lan = "127.0.0.1"
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(("8.8.8.8", 80)); lan = s.getsockname()[0]; s.close()
-    except OSError:
-        try: lan = socket.gethostbyname(hostname)
-        except OSError: pass
-    print(f"Пульт-агент  {hostname}\nPIN          {PIN}\nIP           {lan}\nПорт         {PORT}\nНа iPhone: + → этот IP → этот PIN")
+    lan = lan_ip()
+    ts = tailscale_ip()
+    print("Пульт-агент")
+    print(f"  Имя        {hostname}")
+    print(f"  PIN         {PIN}")
+    print(f"  Wi-Fi IP    {lan}")
+    print(f"  Tailscale   {ts or 'не найден — включи Tailscale на этом ПК'}")
+    print(f"  Порт        {PORT}")
+    if ts:
+        print(f"\nОнлайн: на iPhone + → Tailscale → {ts} → PIN {PIN}")
+    else:
+        print("\nДома: на iPhone + → Wi-Fi →", lan)
     zc = Zeroconf()
-    info = ServiceInfo(SERVICE_TYPE, f"{hostname}.{SERVICE_TYPE}", port=PORT, addresses=[socket.inet_aton(lan)], properties={"os": SYSTEM.encode(), "name": hostname.encode()}, server=f"{hostname}.local.")
-    zc.register_service(info)
+    info = ServiceInfo(
+        SERVICE_TYPE,
+        f"{hostname}.{SERVICE_TYPE}",
+        port=PORT,
+        addresses=[socket.inet_aton(lan)] if not lan.startswith("127.") else [],
+        properties={"os": SYSTEM.encode(), "name": hostname.encode()},
+        server=f"{hostname}.local.",
+    )
+    try:
+        zc.register_service(info)
+    except Exception as exc:
+        print("bonjour", exc)
     async with websockets.serve(client, "0.0.0.0", PORT, max_size=8 * 1024 * 1024):
-        try: await asyncio.Future()
+        try:
+            await asyncio.Future()
         finally:
-            zc.unregister_service(info); zc.close()
+            try:
+                zc.unregister_service(info)
+            except Exception:
+                pass
+            zc.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

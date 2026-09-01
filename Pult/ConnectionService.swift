@@ -6,7 +6,12 @@ import Observation
 final class ConnectionService {
     private var browser: NWBrowser?
     private var socket: URLSessionWebSocketTask?
-    private let urlSession = URLSession(configuration: .default)
+    private let urlSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.timeoutIntervalForRequest = 20
+        return URLSession(configuration: config)
+    }()
     private let queue = DispatchQueue(label: "pult.connection")
     private var frameTimes: [Date] = []
     weak var store: SessionStore?
@@ -34,14 +39,16 @@ final class ConnectionService {
             store?.connectionState = .connecting
             store?.selected = host
         }
-        guard let url = URL(string: "ws://\(host.host):\(host.port)") else { throw URLError(.badURL) }
+        let target = host.host.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: "ws://\(target):\(host.port)") else { throw URLError(.badURL) }
         let task = urlSession.webSocketTask(with: url)
         task.resume()
         socket = task
         try await send(.pair(pin: pin))
         await MainActor.run { store?.connectionState = .connected }
         listen()
-        try await send(.stream(on: true, quality: store?.streamQuality ?? "medium"))
+        let quality = host.link == .tailscale ? "low" : (store?.streamQuality ?? "medium")
+        try await send(.stream(on: true, quality: quality))
         try await send(.listDir(path: ""))
         try await send(.apps)
     }
@@ -135,8 +142,8 @@ final class ConnectionService {
     private func apply(results: Set<NWBrowser.Result>) {
         let mapped: [DiscoveredHost] = results.compactMap { result in
             guard case let .service(name: name, type: _, domain: _, interface: _) = result.endpoint else { return nil }
-            return DiscoveredHost(id: name, name: name, os: .windows, host: name, port: 17420, isOnline: true)
+            return DiscoveredHost(id: name, name: name, os: .windows, host: name, port: 17420, isOnline: true, link: .lan)
         }
-        Task { @MainActor [weak self] in self?.store?.hosts = mapped.sorted { $0.name < $1.name } }
+        Task { @MainActor [weak self] in self?.store?.mergeDiscovered(mapped) }
     }
 }
