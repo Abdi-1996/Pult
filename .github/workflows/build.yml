@@ -7,46 +7,48 @@ on:
 
 jobs:
   ios:
-    name: iPhone Simulator
+    name: IPA
     runs-on: macos-14
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Xcode
         run: |
           sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
 
-      - name: Build
+      - name: Build device
         run: |
           set -euo pipefail
           xcodebuild \
             -project Pult.xcodeproj \
             -scheme Pult \
             -configuration Release \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=- \
+            CODE_SIGN_IDENTITY= \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
             build
 
-      - name: Pack .app
+      - name: Pack IPA
         run: |
           set -euo pipefail
-          APP=$(find DerivedData -name 'Pult.app' -type d | head -1)
+          APP=$(find DerivedData/Build/Products -path '*iphoneos*' -name 'Pult.app' -type d | head -1)
           test -n "$APP"
-          mkdir -p dist
-          cp -R "$APP" dist/Pult.app
-          cd dist && zip -r ../Pult-simulator.zip Pult.app
-          ls -lh ../Pult-simulator.zip
+          echo "APP=$APP"
+          rm -rf Payload
+          mkdir Payload
+          cp -R "$APP" Payload/Pult.app
+          zip -r Pult.ipa Payload
+          ls -lh Pult.ipa
 
-      - name: Upload app
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Pult-iOS-Simulator
-          path: Pult-simulator.zip
+          name: Pult.ipa
+          path: Pult.ipa
           if-no-files-found: error
 
       - name: Upload agent
