@@ -15,6 +15,7 @@ final class ConnectionService {
     private let queue = DispatchQueue(label: "pult.connection")
     private var frameTimes: [Date] = []
     weak var store: SessionStore?
+    private var didAuto = false
 
     func startBrowsing() {
         store?.connectionState = .browsing
@@ -34,6 +35,21 @@ final class ConnectionService {
 
     func stopBrowsing() { browser?.cancel(); browser = nil }
 
+    func autoConnectIfPossible() async {
+        guard !didAuto else { return }
+        didAuto = true
+        guard let store, store.savedPIN.count == 4, let host = store.hosts.first else {
+            startBrowsing()
+            return
+        }
+        do {
+            try await connect(to: host, pin: store.savedPIN)
+        } catch {
+            await MainActor.run { store.connectionState = .failed("Не удалось само подключить") }
+            startBrowsing()
+        }
+    }
+
     func connect(to host: DiscoveredHost, pin: String) async throws {
         await MainActor.run {
             store?.connectionState = .connecting
@@ -45,7 +61,10 @@ final class ConnectionService {
         task.resume()
         socket = task
         try await send(.pair(pin: pin))
-        await MainActor.run { store?.connectionState = .connected }
+        await MainActor.run {
+            store?.connectionState = .connected
+            store?.remember(host, pin: pin)
+        }
         listen()
         let quality = host.link == .tailscale ? "low" : (store?.streamQuality ?? "medium")
         try await send(.stream(on: true, quality: quality))
@@ -130,6 +149,8 @@ final class ConnectionService {
                         return RemoteApp(id: id, name: name, path: item["path"] as? String ?? "")
                     }
                 }
+            case "ok":
+                self.store?.lastError = obj["message"] as? String
             case "error":
                 self.store?.lastError = obj["message"] as? String
                 self.store?.filesLoading = false

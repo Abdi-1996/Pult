@@ -67,10 +67,12 @@ enum ControlCommand: Encodable {
     case upload(path: String, name: String, data: String)
     case apps
     case launch(id: String)
+    case openUrl(url: String)
+    case fetchUrl(url: String)
 
     enum CodingKeys: String, CodingKey {
         case type, dx, dy, button, text, code, modifiers, action, pin
-        case x, y, on, quality, path, name, data, id
+        case x, y, on, quality, path, name, data, id, url
     }
 
     func encode(to encoder: Encoder) throws {
@@ -108,6 +110,10 @@ enum ControlCommand: Encodable {
             try c.encode("apps", forKey: .type)
         case .launch(let id):
             try c.encode("launch", forKey: .type); try c.encode(id, forKey: .id)
+        case .openUrl(let url):
+            try c.encode("openUrl", forKey: .type); try c.encode(url, forKey: .url)
+        case .fetchUrl(let url):
+            try c.encode("fetchUrl", forKey: .type); try c.encode(url, forKey: .url)
         }
     }
 }
@@ -130,16 +136,21 @@ final class SessionStore {
     var incomingFile: (name: String, data: Data)?
     var apps: [RemoteApp] = []
     var appsLoading = false
+    var savedPIN: String = UserDefaults.standard.string(forKey: "pult.pin") ?? ""
 
     private let savedKey = "pult.savedHosts"
 
     init() { loadSaved() }
 
-    func remember(_ host: DiscoveredHost) {
+    func remember(_ host: DiscoveredHost, pin: String? = nil) {
         var next = hosts.filter { $0.id != host.id }
         next.insert(host, at: 0)
         hosts = Array(next.prefix(8))
         persist()
+        if let pin, pin.count == 4 {
+            savedPIN = pin
+            UserDefaults.standard.set(pin, forKey: "pult.pin")
+        }
     }
 
     func mergeDiscovered(_ found: [DiscoveredHost]) {
