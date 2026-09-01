@@ -61,11 +61,12 @@ struct KeyboardSheet: View {
     }
 
     private func sendKey(_ code: String) {
-        var mods: [String] = []
-        if ctrl { mods.append("ctrl") }
-        if alt { mods.append("alt") }
-        if shift { mods.append("shift") }
-        Task { try? await service.send(.key(code: code, modifiers: mods)) }
+        var list: [String] = []
+        if ctrl { list.append("ctrl") }
+        if alt { list.append("alt") }
+        if shift { list.append("shift") }
+        let modifiers = list
+        Task { try? await service.send(.key(code: code, modifiers: modifiers)) }
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
     }
 }
