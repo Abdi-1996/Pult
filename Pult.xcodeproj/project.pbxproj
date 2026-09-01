@@ -17,6 +17,7 @@
 		A10000000000000000000008 /* TrackpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* TrackpadView.swift */; };
 		A10000000000000000000009 /* KeyboardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* KeyboardSheet.swift */; };
 		A10000000000000000000010 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* MediaView.swift */; };
+		A10000000000000000000013 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* BrowserView.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		B10000000000000000000008 /* TrackpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadView.swift; sourceTree = "<group>"; };
 		B10000000000000000000009 /* KeyboardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSheet.swift; sourceTree = "<group>"; };
 		B10000000000000000000010 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
+		B10000000000000000000013 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		B10000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C10000000000000000000001 /* Pult.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pult.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,6 +66,7 @@
 				B10000000000000000000004 /* DeviceListView.swift */,
 				B10000000000000000000005 /* ScreenView.swift */,
 				B10000000000000000000006 /* FilesView.swift */,
+				B10000000000000000000013 /* BrowserView.swift */,
 				B10000000000000000000007 /* AppsView.swift */,
 				B10000000000000000000008 /* TrackpadView.swift */,
 				B10000000000000000000009 /* KeyboardSheet.swift */,
@@ -158,6 +161,7 @@
 				A10000000000000000000004 /* DeviceListView.swift in Sources */,
 				A10000000000000000000005 /* ScreenView.swift in Sources */,
 				A10000000000000000000006 /* FilesView.swift in Sources */,
+				A10000000000000000000013 /* BrowserView.swift in Sources */,
 				A10000000000000000000007 /* AppsView.swift in Sources */,
 				A10000000000000000000008 /* TrackpadView.swift in Sources */,
 				A10000000000000000000009 /* KeyboardSheet.swift in Sources */,
