@@ -48,7 +48,7 @@ struct SessionTabs: View {
 
             NavigationStack {
                 TrackpadView(
-                    host: session.selected ?? DiscoveredHost(id: "x", name: "ПК", os: .windows, host: "", port: 17420, isOnline: true),
+                    host: session.selected ?? DiscoveredHost(id: "x", name: "ПК", os: .windows, host: "", port: 17420, isOnline: true, link: .lan),
                     service: service
                 )
             }
