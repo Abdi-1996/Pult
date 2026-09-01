@@ -17,7 +17,10 @@ final class ConnectionService {
         browser.browseResultsChangedHandler = { [weak self] results, _ in self?.apply(results: results) }
         browser.stateUpdateHandler = { [weak self] state in
             if case .failed(let error) = state {
-                Task { @MainActor in self?.store?.connectionState = .failed(error.localizedDescription) }
+                let message = error.localizedDescription
+                Task { @MainActor [weak self] in
+                    self?.store?.connectionState = .failed(message)
+                }
             }
         }
         browser.start(queue: queue)
@@ -47,9 +50,9 @@ final class ConnectionService {
         Task { try? await send(.stream(on: false, quality: "medium")) }
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
-        Task { @MainActor in
-            store?.connectionState = .idle
-            store?.frameJPEG = nil
+        Task { @MainActor [weak self] in
+            self?.store?.connectionState = .idle
+            self?.store?.frameJPEG = nil
         }
     }
 
@@ -68,7 +71,9 @@ final class ConnectionService {
         socket?.receive { [weak self] result in
             switch result {
             case .failure:
-                Task { @MainActor in self?.store?.connectionState = .failed("Связь оборвалась") }
+                Task { @MainActor [weak self] in
+                    self?.store?.connectionState = .failed("Связь оборвалась")
+                }
             case .success(let message):
                 self?.handle(message)
                 self?.listen()
@@ -85,42 +90,43 @@ final class ConnectionService {
         }
         guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = obj["type"] as? String else { return }
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             switch type {
             case "frame":
                 if let b64 = obj["jpeg"] as? String, let jpeg = Data(base64Encoded: b64) {
-                    store?.frameJPEG = jpeg
-                    store?.frameSize = CGSize(width: obj["w"] as? Double ?? 0, height: obj["h"] as? Double ?? 0)
+                    self.store?.frameJPEG = jpeg
+                    self.store?.frameSize = CGSize(width: obj["w"] as? Double ?? 0, height: obj["h"] as? Double ?? 0)
                     let now = Date()
-                    frameTimes.append(now)
-                    frameTimes = frameTimes.filter { now.timeIntervalSince($0) < 1 }
-                    store?.fps = frameTimes.count
+                    self.frameTimes.append(now)
+                    self.frameTimes = self.frameTimes.filter { now.timeIntervalSince($0) < 1 }
+                    self.store?.fps = self.frameTimes.count
                 }
             case "dir":
-                store?.filesLoading = false
-                store?.currentPath = obj["path"] as? String ?? ""
+                self.store?.filesLoading = false
+                self.store?.currentPath = obj["path"] as? String ?? ""
                 if let raw = obj["entries"] as? [[String: Any]] {
-                    store?.entries = raw.compactMap { item in
+                    self.store?.entries = raw.compactMap { item in
                         guard let name = item["name"] as? String, let path = item["path"] as? String else { return nil }
                         return RemoteEntry(name: name, path: path, isDir: item["isDir"] as? Bool ?? false, size: (item["size"] as? NSNumber)?.int64Value ?? 0, kind: item["kind"] as? String)
                     }
                 }
             case "file":
                 if let name = obj["name"] as? String, let b64 = obj["data"] as? String, let bin = Data(base64Encoded: b64) {
-                    store?.incomingFile = (name, bin)
+                    self.store?.incomingFile = (name, bin)
                 }
             case "apps":
-                store?.appsLoading = false
+                self.store?.appsLoading = false
                 if let raw = obj["items"] as? [[String: Any]] {
-                    store?.apps = raw.compactMap { item in
+                    self.store?.apps = raw.compactMap { item in
                         guard let id = item["id"] as? String, let name = item["name"] as? String else { return nil }
                         return RemoteApp(id: id, name: name, path: item["path"] as? String ?? "")
                     }
                 }
             case "error":
-                store?.lastError = obj["message"] as? String
-                store?.filesLoading = false
-                store?.appsLoading = false
+                self.store?.lastError = obj["message"] as? String
+                self.store?.filesLoading = false
+                self.store?.appsLoading = false
             default: break
             }
         }
@@ -131,6 +137,6 @@ final class ConnectionService {
             guard case let .service(name: name, type: _, domain: _, interface: _) = result.endpoint else { return nil }
             return DiscoveredHost(id: name, name: name, os: .windows, host: name, port: 17420, isOnline: true)
         }
-        Task { @MainActor in store?.hosts = mapped.sorted { $0.name < $1.name } }
+        Task { @MainActor [weak self] in self?.store?.hosts = mapped.sorted { $0.name < $1.name } }
     }
 }
