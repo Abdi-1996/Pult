@@ -17,17 +17,17 @@ struct PultApp: App {
 
 struct RootView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(ConnectionService.self) private var service
 
     var body: some View {
         Group {
-            if session.connectionState.isLive || (session.previewMode && session.selected != nil) {
+            if session.connectionState.isLive || session.connectionState == .connecting {
                 SessionTabs()
             } else {
-                NavigationStack {
-                    DeviceListView()
-                }
+                NavigationStack { DeviceListView() }
             }
         }
+        .task { await service.autoConnectIfPossible() }
     }
 }
 
@@ -39,13 +39,12 @@ struct SessionTabs: View {
         TabView {
             NavigationStack { ScreenView() }
                 .tabItem { Label("Экран", systemImage: "desktopcomputer") }
-
             NavigationStack { FilesView() }
                 .tabItem { Label("Файлы", systemImage: "folder") }
-
+            NavigationStack { BrowserView() }
+                .tabItem { Label("Браузер", systemImage: "safari") }
             NavigationStack { AppsView() }
                 .tabItem { Label("Приложения", systemImage: "square.grid.2x2") }
-
             NavigationStack {
                 TrackpadView(
                     host: session.selected ?? DiscoveredHost(id: "x", name: "ПК", os: .windows, host: "", port: 17420, isOnline: true, link: .lan),
@@ -53,9 +52,6 @@ struct SessionTabs: View {
                 )
             }
             .tabItem { Label("Пульт", systemImage: "hand.draw") }
-
-            NavigationStack { MoreView() }
-                .tabItem { Label("Ещё", systemImage: "ellipsis") }
         }
     }
 }

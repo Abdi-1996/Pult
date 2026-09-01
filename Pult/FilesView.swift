@@ -12,6 +12,13 @@ struct FilesView: View {
     var body: some View {
         List {
             if session.filesLoading { ProgressView("Читаем диск ПК…") }
+            if !session.currentPath.isEmpty {
+                Button {
+                    Task { session.filesLoading = true; try? await service.send(.listDir(path: parentPath)) }
+                } label: {
+                    Label("Назад", systemImage: "chevron.left")
+                }
+            }
             Section("Папки") {
                 ForEach(visible.filter(\.isDir)) { item in
                     Button {
@@ -19,7 +26,7 @@ struct FilesView: View {
                     } label: { Label(item.name, systemImage: "folder.fill") }
                 }
             }
-            Section("Файлы") {
+            Section("Файлы — экспорт на iPhone") {
                 ForEach(visible.filter { !$0.isDir }) { item in
                     HStack {
                         VStack(alignment: .leading) {
@@ -27,9 +34,7 @@ struct FilesView: View {
                             Text(item.sizeText).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Button { Task { try? await service.send(.download(path: item.path)) } } label: {
-                            Image(systemName: "arrow.down.circle")
-                        }
+                        Button("Экспорт") { Task { try? await service.send(.download(path: item.path)) } }
                     }
                 }
             }
@@ -37,8 +42,8 @@ struct FilesView: View {
         .navigationTitle("Файлы")
         .searchable(text: $query)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { importer = true } label: { Image(systemName: "square.and.arrow.up") }
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Импорт") { importer = true }
             }
         }
         .fileImporter(isPresented: $importer, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
@@ -63,6 +68,17 @@ struct FilesView: View {
         }
         .onAppear { if session.entries.isEmpty { Task { try? await service.send(.listDir(path: session.currentPath)) } } }
         .refreshable { try? await service.send(.listDir(path: session.currentPath)) }
+    }
+
+    private var parentPath: String {
+        let path = session.currentPath
+        if path.count <= 3 { return "" }
+        var trimmed = path
+        if trimmed.hasSuffix("\\") || trimmed.hasSuffix("/") { trimmed.removeLast() }
+        if let range = trimmed.range(of: "\\", options: .backwards) ?? trimmed.range(of: "/", options: .backwards) {
+            return String(trimmed[..<range.lowerBound])
+        }
+        return ""
     }
 
     private var visible: [RemoteEntry] {
