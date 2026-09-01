@@ -24,7 +24,6 @@ struct DeviceListView: View {
             PairingSheet(host: host, pin: $pin) {
                 Task {
                     session.previewMode = false
-                    session.remember(host)
                     try? await service.connect(to: host, pin: pin)
                     pairingHost = nil
                 }
@@ -50,7 +49,7 @@ struct DeviceListView: View {
         }
         .onAppear {
             service.store = session
-            service.startBrowsing()
+            if pin.isEmpty, session.savedPIN.count == 4 { pin = session.savedPIN }
         }
     }
 
@@ -76,7 +75,7 @@ struct DeviceListView: View {
         ContentUnavailableView(
             "Нет компьютеров",
             systemImage: "laptopcomputer.and.iphone",
-            description: Text("Wi-Fi дома или Tailscale онлайн. Нажми + и вставь IP из окна агента.")
+            description: Text("Первый раз: + и IP из агента. Дальше приложение подключается само.")
         )
     }
 }
@@ -134,11 +133,6 @@ struct ManualConnectSheet: View {
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                if link == .tailscale {
-                    Text("Один аккаунт Tailscale на ПК и iPhone. Адрес берётся из окна агента, строка Tailscale.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
             }
             .navigationTitle("Подключить")
             .toolbar {
