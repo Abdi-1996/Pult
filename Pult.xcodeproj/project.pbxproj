@@ -1,0 +1,46 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	objectVersion = 56;
+	objects = {
+		A1 /* PultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1 /* PultApp.swift */; };
+		A2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2 /* Models.swift */; };
+		A3 /* ConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3 /* ConnectionService.swift */; };
+		A4 /* DeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4 /* DeviceListView.swift */; };
+		A5 /* ScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5 /* ScreenView.swift */; };
+		A6 /* FilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6 /* FilesView.swift */; };
+		A7 /* AppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7 /* AppsView.swift */; };
+		A8 /* TrackpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8 /* TrackpadView.swift */; };
+		A9 /* KeyboardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9 /* KeyboardSheet.swift */; };
+		A10 /* MediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10 /* MediaView.swift */; };
+		A11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B11 /* Assets.xcassets */; };
+		B1 /* PultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PultApp.swift; sourceTree = "<group>"; };
+		B2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B3 /* ConnectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionService.swift; sourceTree = "<group>"; };
+		B4 /* DeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceListView.swift; sourceTree = "<group>"; };
+		B5 /* ScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenView.swift; sourceTree = "<group>"; };
+		B6 /* FilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesView.swift; sourceTree = "<group>"; };
+		B7 /* AppsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppsView.swift; sourceTree = "<group>"; };
+		B8 /* TrackpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadView.swift; sourceTree = "<group>"; };
+		B9 /* KeyboardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSheet.swift; sourceTree = "<group>"; };
+		B10 /* MediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaView.swift; sourceTree = "<group>"; };
+		B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B12 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C1 /* Pult.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pult.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		E1 = {isa = PBXGroup; children = (E2, E3); sourceTree = "<group>"; };
+		E2 /* Pult */ = {isa = PBXGroup; children = (B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12); path = Pult; sourceTree = "<group>"; };
+		E3 /* Products */ = {isa = PBXGroup; children = (C1); name = Products; sourceTree = "<group>"; };
+		F1 /* Pult */ = {isa = PBXNativeTarget; buildConfigurationList = F11; buildPhases = (F2, D1, F3); buildRules = (); dependencies = (); name = Pult; productName = Pult; productReference = C1; productType = "com.apple.product-type.application"; };
+		F0 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; TargetAttributes = {F1 = {CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = F10; compatibilityVersion = "Xcode 14.0"; developmentRegion = ru; hasScannedForEncodings = 0; knownRegions = (en, ru, Base); mainGroup = E1; productRefGroup = E3; projectDirPath = ""; projectRoot = ""; targets = (F1); };
+		F3 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A11); runOnlyForDeploymentPostprocessing = 0; };
+		F2 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10); runOnlyForDeploymentPostprocessing = 0; };
+		G1 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		G2 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; VALIDATE_PRODUCT = YES; }; name = Release; };
+		G3 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = Pult/Info.plist; INFOPLIST_KEY_CFBundleDisplayName = "Пульт"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.pult.desktop; PRODUCT_NAME = Pult; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		G4 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = Pult/Info.plist; INFOPLIST_KEY_CFBundleDisplayName = "Пульт"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.pult.desktop; PRODUCT_NAME = Pult; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+		F10 /* Build configuration list for PBXProject "Pult" */ = {isa = XCConfigurationList; buildConfigurations = (G1, G2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		F11 /* Build configuration list for PBXNativeTarget "Pult" */ = {isa = XCConfigurationList; buildConfigurations = (G3, G4); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+	};
+	rootObject = F0 /* Project object */;
+}
