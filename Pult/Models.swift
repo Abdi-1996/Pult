@@ -54,6 +54,9 @@ enum ControlCommand: Encodable {
     case move(dx: Double, dy: Double)
     case click(button: String)
     case tap(x: Double, y: Double, button: String)
+    case pointer(x: Double, y: Double)
+    case down(button: String)
+    case up(button: String)
     case scroll(dx: Double, dy: Double)
     case type(text: String)
     case key(code: String, modifiers: [String])
@@ -84,6 +87,12 @@ enum ControlCommand: Encodable {
             try c.encode("click", forKey: .type); try c.encode(button, forKey: .button)
         case .tap(let x, let y, let button):
             try c.encode("tap", forKey: .type); try c.encode(x, forKey: .x); try c.encode(y, forKey: .y); try c.encode(button, forKey: .button)
+        case .pointer(let x, let y):
+            try c.encode("pointer", forKey: .type); try c.encode(x, forKey: .x); try c.encode(y, forKey: .y)
+        case .down(let button):
+            try c.encode("down", forKey: .type); try c.encode(button, forKey: .button)
+        case .up(let button):
+            try c.encode("up", forKey: .type); try c.encode(button, forKey: .button)
         case .scroll(let dx, let dy):
             try c.encode("scroll", forKey: .type); try c.encode(dx, forKey: .dx); try c.encode(dy, forKey: .dy)
         case .type(let text):
