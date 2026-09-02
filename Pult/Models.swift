@@ -58,6 +58,7 @@ enum ControlCommand: Encodable {
     case down(button: String)
     case up(button: String)
     case scroll(dx: Double, dy: Double)
+    case zoom(delta: Double)
     case type(text: String)
     case key(code: String, modifiers: [String])
     case media(action: String)
@@ -75,7 +76,7 @@ enum ControlCommand: Encodable {
 
     enum CodingKeys: String, CodingKey {
         case type, dx, dy, button, text, code, modifiers, action, pin
-        case x, y, on, quality, path, name, data, id, url
+        case x, y, on, quality, path, name, data, id, url, delta
     }
 
     func encode(to encoder: Encoder) throws {
@@ -95,6 +96,8 @@ enum ControlCommand: Encodable {
             try c.encode("up", forKey: .type); try c.encode(button, forKey: .button)
         case .scroll(let dx, let dy):
             try c.encode("scroll", forKey: .type); try c.encode(dx, forKey: .dx); try c.encode(dy, forKey: .dy)
+        case .zoom(let delta):
+            try c.encode("zoom", forKey: .type); try c.encode(delta, forKey: .delta)
         case .type(let text):
             try c.encode("type", forKey: .type); try c.encode(text, forKey: .text)
         case .key(let code, let modifiers):
